@@ -3,6 +3,7 @@ from torchvision import transforms
 from PIL import Image
 from torch import nn
 import torchvision.transforms.functional as TF
+import os
 
 from mnist import CNN  # 引用模型
 
@@ -72,7 +73,6 @@ if __name__ == '__main__':
     model_file = 'best_mnist_cnn.pth'
     
     # 只有当图片文件存在时才运行
-    import os
     if os.path.exists(img_path) and os.path.exists(model_file):
         predict_digit(img_path, model_file)
     else:
