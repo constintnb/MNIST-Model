@@ -43,7 +43,6 @@ def predict_digit(image_path, model_path):
         img_tensor = transform(img)
         
         # 增加 Batch 维度: (1, 28, 28) -> (1, 1, 28, 28)
-        # 因为模型只吃 Batch
         img_tensor = img_tensor.unsqueeze(0).to(device)
 
         # 预测 
@@ -69,7 +68,7 @@ def predict_digit(image_path, model_path):
 
 if __name__ == '__main__':
     
-    img_path = 'num1.png' 
+    img_path = 'num3.png' 
     model_file = 'best_mnist_cnn.pth'
     
     # 只有当图片文件存在时才运行

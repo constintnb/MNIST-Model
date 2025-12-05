@@ -3,6 +3,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from torch import nn
 import torch.optim as optim
+import matplotlib.pyplot as plt
 from PIL import Image
 
 # 1. 定义 CNN 模型
@@ -10,14 +11,16 @@ class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
 
-        self.conv_layers = nn.Sequential(nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, padding=1),
-                                         nn.ReLU(),
-                                         nn.MaxPool2d(kernel_size=2), #尺寸减半，变为14x14
-                                          
-                                         nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1),
-                                         nn.ReLU(),
-                                         nn.MaxPool2d(kernel_size=2) #尺寸再减半，变为7x7
-                                         )
+        self.conv_layers = nn.Sequential(
+            nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2), #尺寸减半，变为14x14
+            
+            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1),
+            nn.ReLU(),
+            
+            nn.MaxPool2d(kernel_size=2) #尺寸再减半，变为7x7
+        )
         
         self.flatten = nn.Flatten()
 
@@ -39,6 +42,8 @@ def train(dataloader, model, loss_fn, optimizer, device):
     
     running_loss = 0.0
     
+    losses = []
+    
     # 遍历数据
     for i, (imgs, targets) in enumerate(dataloader):
         # 搬运数据
@@ -55,7 +60,10 @@ def train(dataloader, model, loss_fn, optimizer, device):
         #打印日志 (每100个Batch打一次)
         if (i + 1) % 100 == 0:
             print(f"    [Batch {i+1}] Loss: {running_loss / 100:.4f}")
+            losses.append(running_loss / 100)
             running_loss = 0.0
+    
+    return losses
 
 
 def test(dataloader, model, loss_fn):
@@ -125,9 +133,12 @@ if __name__ == "__main__":
 
     #4. 训练、测试
 
-    epochs = 5
+    epochs = 100
 
     best_ac = 0
+    
+    tot_loss = []
+    
     
     print(f"开始训练，使用设备: {device}")
     
@@ -135,7 +146,8 @@ if __name__ == "__main__":
         print(f"\n--- Epoch {epoch+1}/{epochs} ---")
         
         # 调用训练函数 
-        train(train_loader, model, loss_fn, optimizer, device)
+        epoch_loss = train(train_loader, model, loss_fn, optimizer, device)
+        tot_loss.extend(epoch_loss)
         
         # 调用测试函数 
         ac=test(test_loader, model, loss_fn)
@@ -146,6 +158,18 @@ if __name__ == "__main__":
             torch.save(model.state_dict(), 'best_mnist_cnn.pth')
             print(f"保存当前最佳模型，准确率: {best_ac*100:.2f}%")
 
+    # 绘制Loss图像
+    
+    plt.figure(figsize=(10, 5))
+    plt.plot(tot_loss, label='Training Loss')
+    plt.title('Training Loss Curve')
+    plt.xlabel('Steps (per 100 batches)')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('loss_curve.png', dpi=300, bbox_inches='tight')
+    plt.show()
+    
         
     print("所有任务完成！")
     
